@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roof Shingle Coverage Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Roof Shingle Coverage Calculator</h1>
+      <p class="text-gray-500 mt-1">Calculate bundles needed and compare 3-tab vs architectural shingles</p>
+    </header>
+
+    <!-- Inputs -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-5">
+      <h2 class="text-base font-semibold text-gray-800 mb-4">Roof Dimensions</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1" for="roofLength">Length (ft)</label>
+          <input id="roofLength" type="number" min="1" step="0.5" value="40" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Roof length in feet" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1" for="roofWidth">Width (ft)</label>
+          <input id="roofWidth" type="number" min="1" step="0.5" value="30" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Roof width in feet" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1" for="numSlopes">Number of Slopes</label>
+          <select id="numSlopes" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Number of roof slopes">
+            <option value="1">1 (shed / flat)</option>
+            <option value="2" selected>2 (gable)</option>
+            <option value="4">4 (hip roof)</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1" for="pitchRise">Roof Pitch (rise)</label>
+          <div class="flex items-center gap-2">
+            <input id="pitchRise" type="number" min="0" max="24" step="1" value="6" class="w-24 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Pitch rise" />
+            <span class="text-gray-500 text-sm">/12</span>
+            <span id="pitchLabel" class="text-sm font-semibold text-blue-600 ml-2"></span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1" for="wastePct">Waste Factor (%)</label>
+          <input id="wastePct" type="number" min="0" max="25" step="1" value="10" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Waste factor percent" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-5">
+      <h2 class="text-base font-semibold text-gray-800 mb-4">Material Pricing</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+          <p class="text-sm font-semibold text-gray-700 mb-2">3-Tab Shingles</p>
+          <label class="block text-xs text-gray-500 mb-1" for="price3Tab">Price per bundle ($)</label>
+          <input id="price3Tab" type="number" min="0" step="0.01" value="28.00" class="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="3-tab shingle price per bundle" />
+          <p class="text-xs text-gray-400 mt-1.5">3 bundles/square · 25–30 yr life</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+          <p class="text-sm font-semibold text-gray-700 mb-2">Architectural (Laminate)</p>
+          <label class="block text-xs text-gray-500 mb-1" for="priceArch">Price per bundle ($)</label>
+          <input id="priceArch" type="number" min="0" step="0.01" value="42.00" class="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Architectural shingle price per bundle" />
+          <p class="text-xs text-gray-400 mt-1.5">3.33 bundles/square · 30–50 yr life</p>
+        </div>
+      </div>
+    </div>
+
+    <button id="calcBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition text-base mb-6">Calculate Coverage</button>
+
+    <!-- Results -->
+    <div id="results" class="hidden" aria-live="polite">
+      <!-- Summary -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 text-center">
+          <p class="text-xs text-gray-400 uppercase font-medium mb-1">Footprint Area</p>
+          <p class="text-xl font-bold text-gray-700" id="footArea"></p>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 text-center">
+          <p class="text-xs text-gray-400 uppercase font-medium mb-1">Pitch Factor</p>
+          <p class="text-xl font-bold text-blue-600" id="pitchFactor"></p>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 text-center">
+          <p class="text-xs text-gray-400 uppercase font-medium mb-1">True Roof Area</p>
+          <p class="text-xl font-bold text-gray-800" id="trueArea"></p>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 text-center">
+          <p class="text-xs text-gray-400 uppercase font-medium mb-1">Roof Squares</p>
+          <p class="text-xl font-bold text-gray-800" id="squares"></p>
+        </div>
+      </div>
+
+      <!-- Comparison tabs -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-5">
+        <div class="grid grid-cols-2 divide-x divide-gray-100">
+          <div class="p-5">
+            <p class="text-xs font-semibold uppercase text-gray-400 mb-3">3-Tab Shingles</p>
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm"><span class="text-gray-500">Bundles needed</span><span class="font-bold text-gray-800" id="bundles3tab"></span></div>
+              <div class="flex justify-between text-sm"><span class="text-gray-500">With waste</span><span class="font-semibold text-gray-700" id="bundles3tabWaste"></span></div>
+              <div class="flex justify-between text-sm border-t border-gray-100 pt-2"><span class="text-gray-600 font-medium">Estimated Cost</span><span class="font-bold text-green-600" id="cost3tab"></span></div>
+            </div>
+          </div>
+          <div class="p-5 bg-blue-50">
+            <p class="text-xs font-semibold uppercase text-blue-400 mb-3">Architectural Shingles</p>
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm"><span class="text-gray-500">Bundles needed</span><span class="font-bold text-gray-800" id="bundlesArch"></span></div>
+              <div class="flex justify-between text-sm"><span class="text-gray-500">With waste</span><span class="font-semibold text-gray-700" id="bundlesArchWaste"></span></div>
+              <div class="flex justify-between text-sm border-t border-gray-100 pt-2"><span class="text-gray-600 font-medium">Estimated Cost</span><span class="font-bold text-blue-700" id="costArch"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 bg-amber-50 border-t border-amber-100">
+          <p class="text-sm text-amber-800" id="upgradeValue"></p>
+        </div>
+      </div>
+
+      <!-- Pitch reference -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-base font-semibold text-gray-800 mb-3">Roof Pitch Reference</h3>
+        <table class="w-full text-sm" aria-label="Roof pitch reference table">
+          <thead class="text-gray-500 border-b border-gray-100">
+            <tr>
+              <th class="text-left pb-2 font-medium">Pitch</th>
+              <th class="text-left pb-2 font-medium">Factor</th>
+              <th class="text-left pb-2 font-medium">Description</th>
+              <th class="text-left pb-2 font-medium">Shingle Suitability</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-gray-50"><td class="py-1.5">2/12</td><td>1.014</td><td>Low slope</td><td>Low-slope modified</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-1.5">4/12</td><td>1.054</td><td>Standard low</td><td>All shingle types</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-1.5">6/12</td><td>1.118</td><td>Standard</td><td>All shingle types</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-1.5">8/12</td><td>1.202</td><td>Moderate steep</td><td>All shingles, starter needed</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-1.5">10/12</td><td>1.302</td><td>Steep</td><td>Architectural recommended</td></tr>
+            <tr><td class="py-1.5">12/12</td><td>1.414</td><td>Very steep (45°)</td><td>Architectural only</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script>
+function pitchFactor(rise) {
+  return Math.sqrt(1 + (rise / 12) ** 2);
+}
+
+function pitchDescription(rise) {
+  if (rise <= 2) return 'Flat/Low';
+  if (rise <= 4) return 'Low';
+  if (rise <= 6) return 'Standard';
+  if (rise <= 8) return 'Moderate';
+  if (rise <= 10) return 'Steep';
+  return 'Very Steep';
+}
+
+function updatePitchLabel() {
+  const rise = parseInt(document.getElementById('pitchRise').value) || 0;
+  document.getElementById('pitchLabel').textContent = pitchDescription(rise);
+}
+
+document.getElementById('pitchRise').addEventListener('input', updatePitchLabel);
+updatePitchLabel();
+
+document.getElementById('calcBtn').addEventListener('click', () => {
+  const length = parseFloat(document.getElementById('roofLength').value) || 1;
+  const width = parseFloat(document.getElementById('roofWidth').value) || 1;
+  const slopes = parseInt(document.getElementById('numSlopes').value) || 2;
+  const rise = parseInt(document.getElementById('pitchRise').value) || 0;
+  const wastePct = parseFloat(document.getElementById('wastePct').value) / 100 || 0;
+  const price3Tab = parseFloat(document.getElementById('price3Tab').value) || 0;
+  const priceArch = parseFloat(document.getElementById('priceArch').value) || 0;
+
+  // Calculate
+  const footprint = length * width;
+  const factor = pitchFactor(rise);
+  const trueArea = footprint * factor;
+  const squaresNet = trueArea / 100;
+  const squaresWithWaste = squaresNet * (1 + wastePct);
+
+  // 3-tab: 3 bundles/square; arch: 3.33 bundles/square
+  const bundles3Net = squaresNet * 3;
+  const bundles3Waste = Math.ceil(squaresWithWaste * 3);
+  const bundlesArchNet = squaresNet * 3.33;
+  const bundlesArchWaste = Math.ceil(squaresWithWaste * 3.33);
+
+  const cost3 = bundles3Waste * price3Tab;
+  const costArch = bundlesArchWaste * priceArch;
+
+  function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+  document.getElementById('footArea').textContent = footprint.toFixed(0) + ' ft²';
+  document.getElementById('pitchFactor').textContent = 'x' + factor.toFixed(3);
+  document.getElementById('trueArea').textContent = trueArea.toFixed(0) + ' ft²';
+  document.getElementById('squares').textContent = squaresNet.toFixed(2) + ' sq';
+
+  document.getElementById('bundles3tab').textContent = bundles3Net.toFixed(1);
+  document.getElementById('bundles3tabWaste').textContent = bundles3Waste + ' bundles';
+  document.getElementById('cost3tab').textContent = fmt(cost3);
+
+  document.getElementById('bundlesArch').textContent = bundlesArchNet.toFixed(1);
+  document.getElementById('bundlesArchWaste').textContent = bundlesArchWaste + ' bundles';
+  document.getElementById('costArch').textContent = fmt(costArch);
+
+  const diff = costArch - cost3;
+  const extraPerSq = squaresNet > 0 ? diff / squaresNet : 0;
+  document.getElementById('upgradeValue').textContent = diff > 0
+    ? `Architectural shingles cost ${fmt(diff)} more (+${fmt(extraPerSq)}/sq) but offer 20+ extra years of life expectancy.`
+    : `Architectural shingles are similarly priced — upgrade is clearly worthwhile for the longer lifespan.`;
+
+  document.getElementById('results').classList.remove('hidden');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+</script>
+</body>
+</html>
